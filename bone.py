@@ -115,127 +115,115 @@ right_fist_pose = np.array([
 	[[-0.003263, -0.034685, 0.139926, 1.000000], [0.019690, -0.100741, 0.957331, 0.270149]],
 ])
 
-def quaternion_multiply(quaternion1, quaternion0):
-	# Computes the Hamilton product
-	w0, x0, y0, z0 = quaternion0
-	w1, x1, y1, z1 = quaternion1
-	return np.array([-x1 * x0 - y1 * y0 - z1 * z0 + w1 * w0,
-					 x1 * w0 + y1 * z0 - z1 * y0 + w1 * x0,
-					 -x1 * z0 + y1 * w0 + z1 * x0 + w1 * y0,
-					 x1 * y0 - y1 * x0 + z1 * w0 + w1 * z0], dtype=np.float64)
+
+def q_conjugate(q):
+	w, x, y, z = q
+	return [w, -x, -y, -z]
 
 def q_mult(q1, q2):
-    w1, x1, y1, z1 = q1
-    w2, x2, y2, z2 = q2
-    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
-    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
-    y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
-    z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
-    return np.array([w, x, y, z])
+	w1, x1, y1, z1 = q1
+	w2, x2, y2, z2 = q2
+	w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+	x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+	y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
+	z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
+	return np.array([w, x, y, z])
 
-def rotate_pose(pose):
+def qv_mult(q1, v1):
+	# Rotates a vector by a quaternion
+	x1, y1, z1 = v1
+	q2 = (0.0, x1, y1, z1)
+	print("q2",q2)
+	return q_mult(q_mult(q1, q2), q_conjugate(q1))[1:]
+
+def build_pose(pose, rotate=False, parent_row=None):
 	'''
-	For all the points in the hand
-	we rotate by the quaternion
-	returns rotated points
-	See: https://www.meccanismocomplesso.org/en/hamiltons-quaternions-and-3d-rotation-with-python/
+	Expects to be fed an array of nodes where
+	each node has one parent and one child.
+	Build hand splits up the hand then feeds it to this
+	functon. e.g. just the thumb. 
 	'''
-	# x,y,z coordinates of the pose
-	rotated_points = []
+
+	# Set Starting point, wrist
+	quad = np.array([1.000000, -0.000000, -0.000000, 0.000000])
+	point = np.array([0.000000, 0.000000, 0.000000])
+	if (parent_row is not None):
+		quad = parent_row[1,:].copy()
+		point = parent_row[0,:3].copy()
+	points = []
 
 	for row in pose:
-		c, q = row
-		print(c)
-		# Convert Quaternion layout that glb uses
-		x, y, z, w = q
-		sp_x, sp_y, sp_z, one  = c
-		'''
-		In SteamVR
-		+Y is up
-		+X is to the right
-		-Z is forward
-		In MatplotLib
-		+Z is up
-		+Y is to the right
-		-X is forward
-		'''
-		vec = [0, sp_x, sp_z, sp_y]
-		r = [w, x, y, z]
-		# Calculate the Quaternion Conjugate
-		r_c = [w, -x, -y, -z]
-		# Rotate the point
-		#rotated_point = quaternion_multiply(quaternion_multiply(r, vec), r_c)
-		rotated_point = q_mult(q_mult(r, vec), r_c)
-		print("rp, ",rotated_point)
-		# Due to quaternion representation, the first element will always be 0
-		rotated_points.append(rotated_point[1:])
-	rotated_points = np.array(rotated_points)
-	#print(rotated_points)
-	return rotated_points
 
-def local_to_global_hand(points):
+		c = np.array(row[0,:3])
+		q = np.array(row[1,:])
+		print("Point", point)
+		print("Coors:",c, type(c))
+		print("Quat:",q)
+		if (rotate):
+			# Multiply the quaternions
+			quad = q_mult(q,  quad)
+			# Rotate the point
+			rp = qv_mult(quad, c)
+		else:
+			rp = c
+		# Get the global point
+		point += rp
+
+		# Add the new point to points
+		points.append(point.copy())
+
+	return points
+
+def build_hand(pose, rotate=False):
 	'''
-	Converts the relative points in SteamHand to global points by building the hand
+	The hand is defined relatively using a series of nodes,
+	Each node has a parent leading back to the wrist,
+	in order to plot the hand, the global positions need to 
+	be calculated. Each position and rotation w.r.t the parents. 
+	Think of the turtle / logo programming enviroment.
 	'''
-	c = points
-	# Add the wrist
-	xs = [c[1][0]]
-	ys = [c[1][1]]
-	zs = [c[1][2]]
-	# get the x,y,z rotated coordinates of the pose
-	# Seperate the fingers
-	thumb = c[2:6]
-	index = c[6:11]
-	middle = c[11:16]
-	ring = c[16:21]
-	pinky = c[21:26]
 
-	# Read the file format into x,y,z and build the hand
-	fingers = [thumb, index, middle, ring, pinky]
-	for finger in fingers:
-		# Use the wrist the first time
-		x = c[1][0]
-		y = c[1][1]
-		z = c[1][2]
+	# Splitting up each parent
+	root = pose[0, :, :]
+	wrist = pose[1, :, :]
+	print("wrist", wrist)
+	thumb_pose = pose[2:6, :, :]
+	index_pose = pose[6:11, :,:]
+	middle_pose = pose[11:16, :,:]
+	ring_pose = pose[16:21, :, :]
+	pinky_pose = pose[21:26, :, :]
+	
+	# Building all the children
+	thumb = build_pose(thumb_pose, rotate, wrist)
+	index = build_pose(index_pose, rotate, wrist)
+	middle = build_pose(middle_pose, rotate, wrist)
+	ring = build_pose(ring_pose, rotate, wrist)
+	pinky = build_pose(pinky_pose, rotate, wrist)
+	hand = [[wrist[0, :3]], thumb, index, middle, ring, pinky]
 
-		for point in finger:
-			x += point[0]
-			y += point[1]
-			z += point[2]
-			xs.append(x)
-			ys.append(y)
-			zs.append(z)
+	# Conbine them into one model
+	points = np.concatenate(hand)
 
-	hand_points = np.array([xs, ys, zs]).T
-	return hand_points
+	return points
 
-def plot_steam_hand_points(points, title="Steam Hand Points"):
-	'''
-	Expects the *relative* coordinates of a pose, not including the quaternions
-	points.shape == (31, 3)
-	'''
+
+def plot_points(points):
+	# Plot the Points
+	x = points[:,0]
+	y = points[:,1]
+	z = points[:,2]
 	# Plot setup
-	fig = plt.figure(title)
-	ax = fig.add_subplot(111, projection='3d', xlim=(-0.2, 0.2), ylim=(-0.2, 0.2), zlim=(0, 0.4))
+	fig = plt.figure()
+	ax = fig.add_subplot(111, projection='3d')
 	ax.set_xlabel('X [m]')
 	ax.set_ylabel('Y [m]')
 	ax.set_zlabel('Z [m]')
 
-	hand_points = local_to_global_hand(points)
-	print("hps", hand_points.shape)
-
-	xs = hand_points[:,0]
-	ys = hand_points[:,1]
-	zs = hand_points[:,2]
-	ax.scatter(xs,ys,zs)
+	ax.scatter(x,y,z)
 	plt.show()
 
 
-def plot_steam_hand(rel_points, title="Steam Hand"):
-	'''
-	Expects the *relative* coordinates of a pose, not including the quaternions
-	points.shape == (31, 3)
-	'''
+def plot_steam_hand(points, title="Steam Hand"):
 	# Plot setup
 	fig = plt.figure(title)
 	ax = fig.add_subplot(111, projection='3d', xlim=(-0.2, 0.2), ylim=(-0.2, 0.2), zlim=(0, 0.4))
@@ -243,11 +231,10 @@ def plot_steam_hand(rel_points, title="Steam Hand"):
 	ax.set_ylabel('Y [m]')
 	ax.set_zlabel('Z [m]')
 
-	hand_points = local_to_global_hand(rel_points)
+	hand_points = points
 	xs = hand_points[:,0]
 	ys = hand_points[:,1]
 	zs = hand_points[:,2]
-	print("Rel", rel_points.shape)
 	print("Global", hand_points.shape)
 	# Plot the Points that make up the hand
 	ax.scatter(xs,ys,zs)
@@ -295,18 +282,28 @@ def plot_steam_hand(rel_points, title="Steam Hand"):
 	l = plt3d.art3d.Line3D([c[0,0], c[20,0]], [c[0,1], c[20,1]], [c[0,2], c[20,2]], color="aqua")
 	ax.add_line(l)
 
-
 	plt.show()
 
+
 if __name__ == "__main__":
-	pose_quards = right_fist_pose[:,0,:3]
-	# Try building a hand from the glb only using the x,y,z
-	#plot_steam_hand_points(pose_quards)
+	points = build_hand(right_pose, False)
+	print("Points Shape",points.shape)
+	print(points)
+	#plot_points(points)
+	plot_steam_hand(points, "Right Pose without Rotation")
 
-	plot_steam_hand(pose_quards)
+	points = build_hand(right_fist_pose, False)
+	print("Points Shape",points.shape)
+	print(points)
+	plot_steam_hand(points, "Fist Pose without Rotation")
 
-	# # rotates each point in the pose, around the origin by the quaternion then builds the hand
-	right_fist_pose = rotate_pose(right_fist_pose)
-	plot_steam_hand(right_fist_pose, "Right fist pose")
-	right_pose = rotate_pose(right_pose)
-	plot_steam_hand(right_pose, "Right Open pose")
+	points = build_hand(right_pose, True)
+	print("Points Shape",points.shape)
+	print(points)
+	#plot_points(points)
+	plot_steam_hand(points, "Right pose with Rotation")
+
+	points = build_hand(right_fist_pose, True)
+	print("Points Shape",points.shape)
+	print(points)
+	plot_steam_hand(points, "Fist Pose with Rotation")
