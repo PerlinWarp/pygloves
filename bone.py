@@ -133,7 +133,6 @@ def qv_mult(q1, v1):
 	# Rotates a vector by a quaternion
 	x1, y1, z1 = v1
 	q2 = (0.0, x1, y1, z1)
-	print("q2",q2)
 	return q_mult(q_mult(q1, q2), q_conjugate(q1))[1:]
 
 def build_pose(pose, rotate=False, parent_row=None):
@@ -144,9 +143,14 @@ def build_pose(pose, rotate=False, parent_row=None):
 	functon. e.g. just the thumb. 
 	'''
 
+	# Set Starting point, root
+	# quad = np.array([1.000000, -0.000000, -0.000000, 0.000000])
+	# point = np.array([0.000000, 0.000000, 0.000000])
 	# Set Starting point, wrist
-	quad = np.array([1.000000, -0.000000, -0.000000, 0.000000])
-	point = np.array([0.000000, 0.000000, 0.000000])
+	quad = np.array([-0.055147, -0.078608, 0.920279, -0.379296])
+	point = np.array([0.034038, 0.036503, 0.164722, 1.000000])
+
+
 	if (parent_row is not None):
 		quad = parent_row[1,:].copy()
 		point = parent_row[0,:3].copy()
@@ -156,9 +160,10 @@ def build_pose(pose, rotate=False, parent_row=None):
 
 		c = np.array(row[0,:3])
 		q = np.array(row[1,:])
-		print("Point", point)
-		print("Coors:",c, type(c))
-		print("Quat:",q)
+		# Change quaternion representation between glb and SteamVR
+		#w, x, y, z = q
+		#q = np.array([w, x, y, z])
+
 		if (rotate):
 			# Multiply the quaternions
 			quad = q_mult(q,  quad)
@@ -186,7 +191,6 @@ def build_hand(pose, rotate=False):
 	# Splitting up each parent
 	root = pose[0, :, :]
 	wrist = pose[1, :, :]
-	print("wrist", wrist)
 	thumb_pose = pose[2:6, :, :]
 	index_pose = pose[6:11, :,:]
 	middle_pose = pose[11:16, :,:]
@@ -223,10 +227,11 @@ def plot_points(points):
 	plt.show()
 
 
-def plot_steam_hand(points, title="Steam Hand"):
-	# Plot setup
-	fig = plt.figure(title)
-	ax = fig.add_subplot(111, projection='3d', xlim=(-0.2, 0.2), ylim=(-0.2, 0.2), zlim=(0, 0.4))
+def plot_steam_hand(points, title="Steam Hand", ax=None):
+	if (ax == None):
+		# Plot setup
+		fig = plt.figure(title)
+		ax = fig.add_subplot(111, projection='3d', xlim=(-0.2, 0.2), ylim=(-0.2, 0.2), zlim=(0, 0.4))
 	ax.set_xlabel('X [m]')
 	ax.set_ylabel('Y [m]')
 	ax.set_zlabel('Z [m]')
@@ -235,7 +240,6 @@ def plot_steam_hand(points, title="Steam Hand"):
 	xs = hand_points[:,0]
 	ys = hand_points[:,1]
 	zs = hand_points[:,2]
-	print("Global", hand_points.shape)
 	# Plot the Points that make up the hand
 	ax.scatter(xs,ys,zs)
 
@@ -284,6 +288,55 @@ def plot_steam_hand(points, title="Steam Hand"):
 
 	plt.show()
 
+def lerp(a, b, f):
+	return a + f * (b - a)
+
+def lerp_quat(q1, q2, f):
+	# Returns a lerped quat between q1 and q2
+	w1, x1, y1, z1 = q1
+	w2, x2, y2, z2 = q2
+
+	w = lerp(w1,w2,f)
+	x = lerp(x1,x2,f)
+	y = lerp(y1,y2,f)
+	z = lerp(z1,z2,f)
+	return [w, x, y, z]
+
+def lerp_pos(p1, p2, f):
+	# Returns a lerped position between q1 and q2
+	# Is this function needed?
+	x1, y1, z1, w = p1
+	x2, y2, z2, w = p2
+	x = lerp(x1,x2,f)
+	y = lerp(y1,y2,f)
+	z = lerp(z1,z2,f)
+	return [x, y, z, 1.0]
+
+def lerp_pose(amount):
+	'''Amount should be between 0 and 1'''
+	open_pose = right_pose
+	closed_pose = right_fist_pose
+
+	# Make a placeholder new pose
+	new_pose = []
+
+	for i in range(0,31):
+		open_row = open_pose[i]
+		open_c = open_row[0, :]
+		open_q = open_row[1, :]
+
+		closed_row = closed_pose[i]
+		closed_c = closed_row[0, :]
+		closed_q = closed_row[1, :]
+
+		c = lerp_pos(open_c, closed_c, amount)
+		q = lerp_quat(open_q, closed_q, amount)
+
+		new_row = np.array([c,q])
+		new_pose.append(new_row)
+
+	new_pose = np.array(new_pose)
+	return new_pose
 
 if __name__ == "__main__":
 	points = build_hand(right_pose, False)
@@ -307,3 +360,7 @@ if __name__ == "__main__":
 	print("Points Shape",points.shape)
 	print(points)
 	plot_steam_hand(points, "Fist Pose with Rotation")
+
+	pose = lerp_pose(0.5)
+	points = build_hand(pose, True)
+	plot_steam_hand(points, "Lerped Pose")
