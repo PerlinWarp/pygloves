@@ -1,9 +1,9 @@
 import numpy as np
 import bone
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
+RESET_SCALE = False
 a0 = 1.0
 
 if __name__ == "__main__":
@@ -32,6 +32,15 @@ if __name__ == "__main__":
 
 	def update(val):
 		ax.clear()
+		ax.set_xlabel('X [mm]')
+		ax.set_ylabel('Y [mm]')
+		ax.set_zlabel('Z [mm]')
+		
+		if (RESET_SCALE == True):
+			ax.set_xlim3d([-0.05, 0.1])
+			ax.set_ylim3d([-0.1, 0.1])
+			ax.set_zlim3d([0, 0.2])
+
 		# Read the slider
 		amp = samp.val
 

@@ -83,7 +83,7 @@ right_pose = np.array([
 
 right_fist_pose = np.array([
 	[[0.000000, 0.000000, 0.000000, 1.000000], [1.000000, -0.000000, -0.000000, 0.000000]],
-	[[0.034038, 0.036503, 0.164722, 1.000000], [-0.055147, -0.078608, 0.920279, -0.379296]],
+	[[0.034038, 0.036503, 0.164722, 1.000000], [-0.055147, -0.078608, 0.920279, -0.379296]], # 2 - Wrist
 	[[0.016305, 0.027529, 0.017800, 1.000000], [0.483332, -0.225703, 0.836342, -0.126413]],
 	[[-0.040406, -0.000000, 0.000000, 1.000000], [0.894335, -0.013302, -0.082902, 0.439448]],
 	[[-0.032517, -0.000000, -0.000000, 1.000000], [0.842428, 0.000655, 0.001244, 0.538807]],
@@ -161,8 +161,8 @@ def build_pose(pose, rotate=False, parent_row=None):
 		c = np.array(row[0,:3])
 		q = np.array(row[1,:])
 		# Change quaternion representation between glb and SteamVR
-		#w, x, y, z = q
-		#q = np.array([w, x, y, z])
+		w, x, y, z = q
+		q = np.array([w, x, y, z])
 
 		if (rotate):
 			# Multiply the quaternions
@@ -226,6 +226,13 @@ def plot_points(points):
 	ax.scatter(x,y,z)
 	plt.show()
 
+def draw_line(p, a, ax, color="blue", b=None):
+	if (b == None): b = a + 1
+	l = plt3d.art3d.Line3D(
+	 [p[a,0], p[b,0]],
+	 [p[a,1], p[b,1]],
+	 [p[a,2], p[b,2]], color=color)
+	ax.add_line(l)
 
 def plot_steam_hand(points, title="Steam Hand", ax=None):
 	if (ax == None):
@@ -248,43 +255,32 @@ def plot_steam_hand(points, title="Steam Hand", ax=None):
 	c = hand_points
 
 	# Draw the thumb
-	for n in [1,2,3]:
-		l = plt3d.art3d.Line3D([c[n,0], c[n+1,0]], [c[n,1], c[n+1,1]], [c[n,2], c[n+1,2]], color="lime")
-		ax.add_line(l)
+	for n in [2,3]:
+		draw_line(c, n, ax, "lime")
 	# Index
 	for n in range(5,9):
-		l = plt3d.art3d.Line3D([c[n,0], c[n+1,0]], [c[n,1], c[n+1,1]], [c[n,2], c[n+1,2]], color='firebrick')
-		ax.add_line(l)
+		draw_line(c, n, ax, "firebrick")
 	# Middle
 	for n in range(10,14):
-		l = plt3d.art3d.Line3D([c[n,0], c[n+1,0]], [c[n,1], c[n+1,1]], [c[n,2], c[n+1,2]], color='purple')
-		ax.add_line(l)
+		draw_line(c, n, ax, "purple")
 	# Ring Finger
 	for n in range(15,19):
-		l = plt3d.art3d.Line3D([c[n,0], c[n+1,0]], [c[n,1], c[n+1,1]], [c[n,2], c[n+1,2]], color='blue')
-		ax.add_line(l)
+		draw_line(c, n, ax, "blue")
 	# Pinky finger
 	for n in range(20,24):
-		l = plt3d.art3d.Line3D([c[n,0], c[n+1,0]], [c[n,1], c[n+1,1]], [c[n,2], c[n+1,2]], color='pink')
-		ax.add_line(l)
+		draw_line(c, n, ax, "pink")
 	
 	# Draw lines to connect the metacarpals
 	for i in range(4):
-		ms = [2, 6,11,16,21]
+		ms = [1, 5, 10, 15, 20]
 		l = plt3d.art3d.Line3D([c[ms[i],0], c[ms[i+1],0]], [c[ms[i],1], c[ms[i+1],1]], [c[ms[i],2], c[ms[i+1],2]], color="aqua")
 		ax.add_line(l)
 	# Draw lines to connect the hand
-	for i in range(4):
-		ms = [1, 5,10,15,20]
-		l = plt3d.art3d.Line3D([c[ms[i],0], c[ms[i+1],0]], [c[ms[i],1], c[ms[i+1],1]], [c[ms[i],2], c[ms[i+1],2]], color="aqua")
-		ax.add_line(l)
-	# Connect the bottom of the hand together
-	l = plt3d.art3d.Line3D([c[1,0], c[20,0]], [c[1,1], c[20,1]], [c[1,2], c[20,2]], color="aqua")
-	ax.add_line(l)
-	l = plt3d.art3d.Line3D([c[1,0], c[0,0]], [c[1,1], c[0,1]], [c[1,2], c[0,2]], color="aqua")
-	ax.add_line(l)
-	l = plt3d.art3d.Line3D([c[0,0], c[20,0]], [c[0,1], c[20,1]], [c[0,2], c[20,2]], color="aqua")
-	ax.add_line(l)
+	# Connect the Thumb Metacarpal to the base of the index
+	draw_line(c, 1, ax, "aqua", 2)
+	draw_line(c, 2, ax, "aqua", 5)
+	# Palm to pinky base
+	draw_line(c, 1, ax, "aqua", 20)
 
 	plt.show()
 
