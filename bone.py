@@ -84,7 +84,7 @@ right_pose = np.array([
 right_fist_pose = np.array([
 	[[0.000000, 0.000000, 0.000000, 1.000000], [1.000000, -0.000000, -0.000000, 0.000000]],
 	[[0.034038, 0.036503, 0.164722, 1.000000], [-0.055147, -0.078608, 0.920279, -0.379296]], # 2 - Wrist
-	[[0.016305, 0.027529, 0.017800, 1.000000], [0.483332, -0.225703, 0.836342, -0.126413]],
+	[[0.016305, 0.027529, 0.017800, 1.000000], [0.483332, -0.225703, 0.836342, -0.126413]], # Thumb meta
 	[[-0.040406, -0.000000, 0.000000, 1.000000], [0.894335, -0.013302, -0.082902, 0.439448]],
 	[[-0.032517, -0.000000, -0.000000, 1.000000], [0.842428, 0.000655, 0.001244, 0.538807]],
 	[[-0.030464, 0.000000, 0.000000, 1.000000], [1.000000, -0.000000, -0.000000, 0.000000]],
@@ -143,17 +143,16 @@ def build_pose(pose, rotate=False, parent_row=None):
 	functon. e.g. just the thumb. 
 	'''
 
-	# Set Starting point, root
-	# quad = np.array([1.000000, -0.000000, -0.000000, 0.000000])
-	# point = np.array([0.000000, 0.000000, 0.000000])
-	# Set Starting point, wrist
-	quad = np.array([-0.055147, -0.078608, 0.920279, -0.379296])
-	point = np.array([0.034038, 0.036503, 0.164722, 1.000000])
-
-
 	if (parent_row is not None):
 		quad = parent_row[1,:].copy()
 		point = parent_row[0,:3].copy()
+	else:
+		# Set Starting point, root
+		#quad = np.array([1.000000, -0.000000, -0.000000, 0.000000])
+		#point = np.array([0.000000, 0.000000, 0.000000])
+		# Set Starting point, wrist
+		quad = np.array([-0.055147, -0.078608, 0.920279, -0.379296])
+		point = np.array([0.034038, 0.036503, 0.164722, 1.000000])
 	points = []
 
 	for row in pose:
@@ -186,12 +185,22 @@ def build_hand(pose, rotate=False):
 	in order to plot the hand, the global positions need to 
 	be calculated. Each position and rotation w.r.t the parents. 
 	Think of the turtle / logo programming enviroment.
+
+	Input is expected to follow the format listed above
+
 	'''
+
+	thumb_start = 2
+	index_start = 6
+	middle_start = 11
+	ring_start = 16
+	pinky_start = 21
 
 	# Splitting up each parent
 	root = pose[0, :, :]
 	wrist = pose[1, :, :]
 	thumb_pose = pose[2:6, :, :]
+	print("Thumb pose", thumb_pose.shape)
 	index_pose = pose[6:11, :,:]
 	middle_pose = pose[11:16, :,:]
 	ring_pose = pose[16:21, :, :]
@@ -335,6 +344,8 @@ def lerp_pose(amount):
 	return new_pose
 
 if __name__ == "__main__":
+	print("Open Pose Shape: ", right_pose.shape)
+
 	points = build_hand(right_pose, False)
 	print("Points Shape",points.shape)
 	print(points)

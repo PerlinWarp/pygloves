@@ -9,6 +9,7 @@ a0 = 1.0
 if __name__ == "__main__":
 	pose = bone.lerp_pose(0.2)
 	points = bone.build_hand(pose, True)
+	print("Built hand", points.shape)
 
 	# Plot Setup
 	fig = plt.figure()
