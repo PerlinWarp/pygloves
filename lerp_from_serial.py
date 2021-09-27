@@ -1,3 +1,4 @@
+import multiprocessing
 import serial
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,10 +10,7 @@ import bone
 COM_PORT = "COM9"
 RESET_SCALE = False
 
-# Open Serial Port
-ser = serial.Serial(COM_PORT,'115200', timeout=1)  # open serial port
-print("Listening on "+COM_PORT)
-
+q = multiprocessing.Queue()
 # Plot Setup
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -21,6 +19,24 @@ ax.set_xlabel('X [m]')
 ax.set_ylabel('Y [m]')
 ax.set_zlabel('Z [m]')
 
+# ------------ Serial Setup ---------------
+def serial_worker(q):
+	# Open Serial Port
+	COM_PORT = "COM9"
+	ser = serial.Serial(COM_PORT,'115200', timeout=1)  # open serial port
+	print("Listening on "+COM_PORT)
+
+	while True:
+		try:
+			# Read from serial
+			read = ser.readline()
+			fingers = decode_serial(read)
+			# Add the decoded values to the queue
+			q.put(fingers)
+		except KeyboardInterrupt:
+			print("Quitting thread...")
+			ser.close()
+			quit()
 
 def decode_serial(s):
 	if s == b'':
@@ -35,15 +51,10 @@ def decode_serial(s):
 		s = [int(f) for f in s]
 		return s
 
-def on_close(event):
-	print("Closed Figure")
-	ser.close()
-	quit()
-
 def animate(i):
-	# Read from serial
-	read = ser.readline()
-	fingers = decode_serial(read)
+	fingers = [0,0,0,0,0]
+	while not(q.empty()):
+		fingers = list(q.get())
 
 	# Turn finger values into Lerp Vals
 	val = fingers[0] / 1000
@@ -61,8 +72,10 @@ def animate(i):
 	bone.plot_steam_hand(points, "Lerped Pose", ax)
 
 if __name__ == "__main__":
+	p = multiprocessing.Process(target=serial_worker, args=(q,), daemon=True)
+	p.start()
 	anim = animation.FuncAnimation(fig, animate, blit=False, interval=1)
 	try:
 		plt.show()
 	except KeyboardInterrupt:
-		sys.exit(0)
+		quit()

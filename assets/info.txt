@@ -1,0 +1,9 @@
+glove_anim.glb / glb.json is from danwillm
+Who got it from steamvr\drivers\indexcontroller
+
+skeletons are from Steam\steamapps\common\SteamVR\resources\skeletons\
+vr_glove is from: Steam\steamapps\common\SteamVR\resources\rendermodels\vr_glove
+As mentioned here:
+https://github.com/ValveSoftware/openvr/wiki/Hand-Skeleton
+
+Unity contains the assets from the SteamVR Unity Plugin SteamVR/Resources 

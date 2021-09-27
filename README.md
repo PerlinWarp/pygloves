@@ -16,5 +16,7 @@ The glb file is hierarchical, so the end of the finger cannot just be plotted, i
   
 #### Useful links  
 [glb/gltf2.0 refrence guide](https://www.khronos.org/files/gltf20-reference-guide.pdf)  
+[glb Nodes Tutorial](https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_004_ScenesNodes.md)    
 [OpenVR Hand Skeleton Docs](https://github.com/ValveSoftware/openvr/wiki/Hand-Skeleton)  
 [3Blue1Brown, Visualizing quaternions](https://www.youtube.com/watch?v=d4EgbgTm0Bg)  
+[Implimenting Forward Kinematics](https://www.alanzucconi.com/2017/04/06/implementing-forward-kinematics/)  
