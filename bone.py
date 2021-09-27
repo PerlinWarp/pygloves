@@ -390,15 +390,17 @@ def lerp_pos(p1, p2, f):
 	z = lerp(z1,z2,f)
 	return [x, y, z, 1.0]
 
-def lerp_pose(amount):
+def lerp_pose(amount, open_pose=None, closed_pose=None):
 	'''Amount should be between 0 and 1'''
-	open_pose = right_pose
-	closed_pose = right_fist_pose
+	if (open_pose is None):
+		open_pose = right_pose
+		closed_pose = right_fist_pose
 
 	# Make a placeholder new pose
 	new_pose = []
+	pose_size = open_pose.shape[0] # E.g. 31 for full pose
 
-	for i in range(0,31):
+	for i in range(0, pose_size):
 		open_row = open_pose[i]
 		open_c = open_row[0, :]
 		open_q = open_row[1, :]
