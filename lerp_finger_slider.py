@@ -30,7 +30,7 @@ if __name__ == "__main__":
 	ax_ring = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
 	ax_pinky = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
 	# Add the sliders
-	samp = Slider(axamp, 'Amp', 0.1, 1.5, valinit=a0)
+	samp = Slider(axamp, 'All', 0.1, 1.5, valinit=a0)
 	sthumb = Slider(ax_thumb, 'Thumb', 0.1, 1.5, valinit=a0)
 	sindex = Slider(ax_index, 'Index', 0.1, 1.5, valinit=a0)
 	smiddle = Slider(ax_middle, 'Middle', 0.1, 1.5, valinit=a0)
