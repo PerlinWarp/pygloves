@@ -23,7 +23,7 @@ if __name__ == "__main__":
 	ax.margins(x=0)
 	axcolor = 'lightgoldenrodyellow'
 	axamp = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
-	samp = Slider(axamp, 'Amp', 0.1, 1.5, valinit=a0)
+	samp = Slider(axamp, 'Curl', 0.1, 1.5, valinit=a0)
 
 	# Plot the Points
 	x = points[:,0]
