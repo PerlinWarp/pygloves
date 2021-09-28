@@ -1,5 +1,5 @@
 # pygloves-utils  
-![Opening and closing the fist](https://media1.giphy.com/media/Gq9PoRvF64cB9sUCLy/giphy.gif?cid=790b7611a619ce1f84f49e7d029ecd56725db481a5f87a2c&rid=giphy.gif&ct=g)
+![Demo showing hand and finger movement](https://media2.giphy.com/media/4P8L3HQAg5qEDBmffP/giphy.gif?cid=790b7611cd5a3029ab0414bbdc674fb1a19867a290c3426a&rid=giphy.gif&ct=g)
 
 It would be nice to see if [LucidGloves](https://github.com/LucidVR/lucidgloves) work without having to start SteamVR.
 This repo attempts to plot glb files in the same was as Steam, so that you can test out experimental designs, such as gloves with potentiometers per finger joint, without having to get it working with Steam, etc    
@@ -10,11 +10,11 @@ pip install matplotlib
 
 python lerp_slider.py
 ```
-  
+
 #### lerp_finger_from_serial.py  
 Reads serial values then plots the hand live using multithreading.  
 In order to work, you need to define the COM port that the Arduino is using and make sure no other program is using it. E.g. SteamVR    
-  
+
 #### lerp_finger_slider.py  
 Features 6 sliders, one for overall curl and one for each finger.   
 Moving these sliders will generate plots of the hand using those curl values.  

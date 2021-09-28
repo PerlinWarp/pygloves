@@ -3,8 +3,12 @@ import bone
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-RESET_SCALE = False
+RESET_SCALE = True
 a0 = 1.0
+
+# Select which poses we want to lerp between
+open_pose = bone.right_open_pose
+closed_pose = bone.right_fist_pose
 
 if __name__ == "__main__":
 	# Get something to plot initially
@@ -58,9 +62,6 @@ if __name__ == "__main__":
 		# Read the sliders
 		amp = samp.val
 
-		open_pose = bone.right_pose
-		closed_pose = bone.right_fist_pose
-
 		# Split up the hand
 		wrist = open_pose[0:2, :, :]
 		thumb_pose_o = open_pose[2:6, :, :]
@@ -106,7 +107,7 @@ if __name__ == "__main__":
 		# Read the slider
 		amp = samp.val
 
-		pose = bone.lerp_pose(amp)
+		pose = bone.lerp_pose(amp, open_pose, closed_pose)
 		points = bone.build_hand(pose, True)
 		# Plot the Points
 		bone.plot_steam_hand(points, "Lerped Pose", ax)
