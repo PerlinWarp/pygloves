@@ -10,7 +10,7 @@ import serial_utils as s
 
 # Use device manager to find the Arduino's serial port.
 COM_PORT = "COM9"
-RESET_SCALE = True
+RESET_SCALE = False
 LEGACY_DECODE = False # If false, will use alpha encodings
 
 q = multiprocessing.Queue()
@@ -21,6 +21,10 @@ plt.subplots_adjust(left=0.25, bottom=0.25)
 ax.set_xlabel('X [m]')
 ax.set_ylabel('Y [m]')
 ax.set_zlabel('Z [m]')
+# Set the scale once
+ax.set_xlim3d([-0.05, 0.1])
+ax.set_ylim3d([-0.1, 0.1])
+ax.set_zlim3d([0, 0.2])
 
 # ------------ Serial Setup ---------------
 def serial_worker(q):
@@ -49,6 +53,12 @@ def animate(i):
 	while not(q.empty()):
 		fingers = list(q.get())
 
+	# Plot
+	ax.clear()
+	ax.set_xlabel('X [mm]')
+	ax.set_ylabel('Y [mm]')
+	ax.set_zlabel('Z [mm]')
+
 	# Turn finger values into Lerp Vals
 	thumb_val = fingers[0] / 1024
 	index_val = fingers[1] / 1024
@@ -56,42 +66,10 @@ def animate(i):
 	ring_val = fingers[3] / 1024
 	pinky_val = fingers[4] / 1024
 	print("Fingers", fingers)
+	fingers = [thumb_val, index_val, middle_val, ring_val, pinky_val]
+	# Lerp the right hand
+	points = bone.lerp_fingers(fingers, bone.right_open_pose, bone.right_fist_pose)
 
-	# Plot
-	ax.clear()
-	ax.set_xlabel('X [mm]')
-	ax.set_ylabel('Y [mm]')
-	ax.set_zlabel('Z [mm]')
-
-	open_pose = bone.right_open_pose
-	closed_pose = bone.right_fist_pose
-
-	# Split up the hand
-	wrist = open_pose[0:2, :, :]
-	thumb_pose_o = open_pose[2:6, :, :]
-	index_pose_o = open_pose[6:11, :,:]
-	middle_pose_o = open_pose[11:16, :,:]
-	ring_pose_o = open_pose[16:21, :, :]
-	pinky_pose_o = open_pose[21:26, :, :]
-
-	thumb_pose_c = closed_pose[2:6, :, :]
-	index_pose_c = closed_pose[6:11, :,:]
-	middle_pose_c = closed_pose[11:16, :,:]
-	ring_pose_c = closed_pose[16:21, :, :]
-	pinky_pose_c = closed_pose[21:26, :, :]
-	# Lerp individual parts
-	thumb_pose = bone.lerp_pose(thumb_val, thumb_pose_o, thumb_pose_c)
-	index_pose = bone.lerp_pose(index_val, index_pose_o, index_pose_c)
-	middle_pose = bone.lerp_pose(middle_val, middle_pose_o, middle_pose_c)
-	ring_pose = bone.lerp_pose(ring_val, ring_pose_o, ring_pose_c)
-	pinky_pose = bone.lerp_pose(pinky_val, pinky_pose_o, pinky_pose_c)
-
-	# Put the hand back together
-	hand = [wrist, thumb_pose, index_pose, middle_pose, ring_pose, pinky_pose]
-	# Conbine them into one model
-	pose = np.concatenate(hand)
-
-	points = bone.build_hand(pose, True)
 	# Plot the Points
 	bone.plot_steam_hand(points, "Lerped Pose", ax)
 

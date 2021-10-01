@@ -61,33 +61,9 @@ if __name__ == "__main__":
 
 		# Read the sliders
 		amp = samp.val
+		fingers = [sthumb.val, sindex.val, smiddle.val, sring.val, spinky.val]
 
-		# Split up the hand
-		wrist = open_pose[0:2, :, :]
-		thumb_pose_o = open_pose[2:6, :, :]
-		index_pose_o = open_pose[6:11, :,:]
-		middle_pose_o = open_pose[11:16, :,:]
-		ring_pose_o = open_pose[16:21, :, :]
-		pinky_pose_o = open_pose[21:26, :, :]
-
-		thumb_pose_c = closed_pose[2:6, :, :]
-		index_pose_c = closed_pose[6:11, :,:]
-		middle_pose_c = closed_pose[11:16, :,:]
-		ring_pose_c = closed_pose[16:21, :, :]
-		pinky_pose_c = closed_pose[21:26, :, :]
-		# Lerp individual parts
-		thumb_pose = bone.lerp_pose(sthumb.val, thumb_pose_o, thumb_pose_c)
-		index_pose = bone.lerp_pose(sindex.val, index_pose_o, index_pose_c)
-		middle_pose = bone.lerp_pose(smiddle.val, middle_pose_o, middle_pose_c)
-		ring_pose = bone.lerp_pose(sring.val, ring_pose_o, ring_pose_c)
-		pinky_pose = bone.lerp_pose(spinky.val, pinky_pose_o, pinky_pose_c)
-
-		# Put the hand back together
-		hand = [wrist, thumb_pose, index_pose, middle_pose, ring_pose, pinky_pose]
-		# Conbine them into one model
-		pose = np.concatenate(hand)
-
-		points = bone.build_hand(pose, True)
+		points = bone.lerp_fingers(fingers, bone.right_open_pose, bone.right_fist_pose)
 		# Plot the Points
 		bone.plot_steam_hand(points, "Lerped Pose", ax)
 
