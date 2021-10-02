@@ -10,7 +10,7 @@ import serial_utils as s
 
 # Use device manager to find the Arduino's serial port.
 COM_PORT = "COM9"
-RESET_SCALE = False
+RESET_SCALE = True
 LEGACY_DECODE = False # If false, will use alpha encodings
 
 q = multiprocessing.Queue()
@@ -58,6 +58,10 @@ def animate(i):
 	ax.set_xlabel('X [mm]')
 	ax.set_ylabel('Y [mm]')
 	ax.set_zlabel('Z [mm]')
+	if (RESET_SCALE == True):
+		ax.set_xlim3d([-0.05, 0.1])
+		ax.set_ylim3d([-0.1, 0.1])
+		ax.set_zlim3d([0, 0.2])
 
 	# Turn finger values into Lerp Vals
 	thumb_val = fingers[0] / 1024
