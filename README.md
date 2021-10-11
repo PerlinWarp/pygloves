@@ -7,12 +7,17 @@ This repo attempts to plot glb files in the same was as Steam, so that you can t
 ```
 pip install numpy
 pip install matplotlib
-pip install pyserial
 
-# Test using Arduino over Serial (check comport and left/right handedness)
-python lerp_finger_from_serial.py
 # Test using GUI
 python lerp_finger_slider.py
+
+# Test using Arduino over Serial (check comport and left/right handedness)
+pip install pyserial
+python lerp_finger_from_serial.py
+
+# Test using Myo
+pip install pyomyo
+python lerp_finger_from_myo.py
 ```
 
 #### lerp_finger_from_serial.py  
