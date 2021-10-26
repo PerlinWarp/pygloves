@@ -1,7 +1,13 @@
+'''
+Inside opengloves you need to be using the NamedPipe communication method with the right hand enabled.
+Note this is made for the right hand.
+'''
 import numpy as np
-import bone
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
+
+import serial_utils as s
+import bone
 
 RESET_SCALE = True
 a0 = 1.0
@@ -64,6 +70,9 @@ if __name__ == "__main__":
 		amp = samp.val
 		fingers = [sthumb.val, sindex.val, smiddle.val, sring.val, spinky.val]
 
+		print("Fingers", fingers)
+		s.ipc.send_to_opengloves(fingers)
+
 		points = bone.lerp_fingers(fingers, bone.right_open_pose, bone.right_fist_pose)
 		# Plot the Points
 		bone.plot_steam_hand(points, "Lerped Pose", ax)
@@ -83,6 +92,8 @@ if __name__ == "__main__":
 
 		# Read the slider
 		amp = samp.val
+
+		s.ipc.send_to_opengloves([amp]*5)
 
 		pose = bone.lerp_pose(amp, open_pose, closed_pose)
 		points = bone.build_hand(pose, True)
