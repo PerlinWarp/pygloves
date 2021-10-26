@@ -5,23 +5,28 @@ https://stackoverflow.com/questions/48542644/python-and-windows-named-pipes
 import struct, time
 import win32pipe, win32file, win32con 
 
-def pack_struct(flexion):
+def pack_struct(flexion, joys=None, bools=None):
     ''' Struct format is from: https://github.com/LucidVR/opengloves-driver/.../EncodingManager.h#L17
-  const std::array<float, 5> flexion;
-  const float joyX;
+  const std::array<float, 5> flexion; // Between 0 and 1
+  const float joyX;     // Between -1 and 1
   const float joyY;
-  const bool joyButton;
-  const bool trgButton;
-  const bool aButton;
-  const bool bButton;
-  const bool grab;
-  const bool pinch;
-  const bool menu;
-  const bool calibrate;
+  const bool joyButton; // 0
+  const bool trgButton; // 1
+  const bool aButton;   // 2
+  const bool bButton;   // 3
+  const bool grab;      // 4
+  const bool pinch;     // 5
+  const bool menu;      // 6 
+  const bool calibrate; // 7
     '''
-    joyX = 512
-    joyY = 512
-    bools = [False]*8
+    if joys == None:
+        joyX = 0.0
+        joyY = 0.0
+    else:
+        joyX = joys[0]
+        joyY = joys[1]
+    if bools == None:
+        bools = [False]*8
 
     # https://tuttlem.github.io/2016/04/06/packing-data-with-python.html
     pack_obj = struct.pack('@5f', flexion[0], flexion[1], flexion[2], flexion[3], flexion[4])
@@ -30,8 +35,8 @@ def pack_struct(flexion):
     pack_obj = pack_obj + joys + pack_bools
     return pack_obj
 
-def send_to_opengloves(fingers):
-    packed = pack_struct(fingers)
+def send_to_opengloves(fingers, joys=None, bools=None):
+    packed = pack_struct(fingers, joys, bools)
     
     # pipename should be of the form \\.\pipe\mypipename
     # OpenGloves /named-pipe-communication-manager/src/DeviceProvider.cpp#L77

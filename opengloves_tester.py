@@ -4,7 +4,7 @@ Note this is made for the right hand.
 '''
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, Button
 
 import serial_utils as s
 import bone
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 	# Plot Setup
 	fig = plt.figure("Finger Plots",figsize=(10, 10), dpi=100)
 	ax = fig.add_subplot(111, projection='3d')
-	plt.subplots_adjust(left=0.25, bottom=0.40)
+	plt.subplots_adjust(left=0.25, bottom=0.50)
 	ax.set_xlabel('X [m]')
 	ax.set_ylabel('Y [m]')
 	ax.set_zlabel('Z [m]')
@@ -34,20 +34,44 @@ if __name__ == "__main__":
 	# Slider setup
 	ax.margins(x=0)
 	axcolor = 'lightgoldenrodyellow'
-	axamp = plt.axes([0.25, 0.30, 0.65, 0.03], facecolor=axcolor)
-	ax_thumb = plt.axes([0.25, 0.25, 0.65, 0.03], facecolor=axcolor)
-	ax_index = plt.axes([0.25, 0.20, 0.65, 0.03], facecolor=axcolor)
-	ax_middle = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
-	ax_ring = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
-	ax_pinky = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
-	# Add the sliders
-	samp = Slider(axamp, 'All', 0.1, 1.5, valinit=a0)
-	sthumb = Slider(ax_thumb, 'Thumb', 0.1, 1.5, valinit=a0)
-	sindex = Slider(ax_index, 'Index', 0.1, 1.5, valinit=a0)
-	smiddle = Slider(ax_middle, 'Middle', 0.1, 1.5, valinit=a0)
-	sring = Slider(ax_ring, 'Ring', 0.1, 1.5, valinit=a0)
-	spinky = Slider(ax_pinky, 'Pinky', 0.1, 1.5, valinit=a0)
+	axamp = plt.axes([0.25, 0.40, 0.50, 0.03], facecolor=axcolor)
+	ax_thumb = plt.axes([0.25, 0.35, 0.50, 0.03], facecolor=axcolor)
+	ax_index = plt.axes([0.25, 0.30, 0.50, 0.03], facecolor=axcolor)
+	ax_middle = plt.axes([0.25, 0.25, 0.50, 0.03], facecolor=axcolor)
+	ax_ring = plt.axes([0.25, 0.20, 0.50, 0.03], facecolor=axcolor)
+	ax_pinky = plt.axes([0.25, 0.15, 0.50, 0.03], facecolor=axcolor)
+	ax_joy_x = plt.axes([0.25, 0.10, 0.50, 0.03], facecolor=axcolor)
+	ax_joy_y = plt.axes([0.25, 0.05, 0.50, 0.03], facecolor=axcolor)
 
+
+	# Add the sliders
+	samp = Slider(axamp, 'All', 0.1, 1.0, valinit=a0)
+	sthumb = Slider(ax_thumb, 'Thumb', 0.1, 1.0, valinit=a0)
+	sindex = Slider(ax_index, 'Index', 0.1, 1.0, valinit=a0)
+	smiddle = Slider(ax_middle, 'Middle', 0.1, 1.0, valinit=a0)
+	sring = Slider(ax_ring, 'Ring', 0.1, 1.0, valinit=a0)
+	spinky = Slider(ax_pinky, 'Pinky', 0.1, 1.0, valinit=a0)
+	sjoy_x = Slider(ax_joy_x, 'Joy X', -1.0, 1.0, valinit=a0)
+	sjoy_y = Slider(ax_joy_y, 'Joy Y', -1.0, 1.0, valinit=a0)
+
+	# Button Setup
+	ax_joyb =    plt.axes([0.8, 0.40, 0.1, 0.03])
+	ax_trigger = plt.axes([0.8, 0.35, 0.1, 0.03])
+	ax_a =       plt.axes([0.8, 0.30, 0.1, 0.03])
+	ax_b =       plt.axes([0.8, 0.25, 0.1, 0.03])
+	ax_grab =    plt.axes([0.8, 0.20, 0.1, 0.03])
+	ax_pinch =   plt.axes([0.8, 0.15, 0.1, 0.03])
+	ax_menu =    plt.axes([0.8, 0.10, 0.1, 0.03])
+
+
+	# Add the button
+	joy_button = Button(ax_joyb, 'Joy Click', color=axcolor, hovercolor='0.975')
+	trigger_button = Button(ax_trigger, 'Trigger', color=axcolor, hovercolor='0.975')
+	a_button = Button(ax_a, 'A', color=axcolor, hovercolor='0.975')
+	b_button = Button(ax_b, 'B', color=axcolor, hovercolor='0.975')
+	grab_button = Button(ax_grab, 'Grab', color=axcolor, hovercolor='0.975')
+	pinch_button = Button(ax_pinch, 'Pinch', color=axcolor, hovercolor='0.975')
+	menu_button = Button(ax_menu, 'Menu', color=axcolor, hovercolor='0.975')	
 
 	# Plot the Points
 	x = points[:,0]
@@ -69,9 +93,10 @@ if __name__ == "__main__":
 		# Read the sliders
 		amp = samp.val
 		fingers = [sthumb.val, sindex.val, smiddle.val, sring.val, spinky.val]
-
-		print("Fingers", fingers)
-		s.ipc.send_to_opengloves(fingers)
+		bools = [False]*8
+		joys = [sjoy_x.val, sjoy_x.val]
+		print("Fingers", fingers, "Joys", joys)
+		s.ipc.send_to_opengloves(fingers, joys, bools)
 
 		points = bone.lerp_fingers(fingers, bone.right_open_pose, bone.right_fist_pose)
 		# Plot the Points
@@ -92,7 +117,6 @@ if __name__ == "__main__":
 
 		# Read the slider
 		amp = samp.val
-
 		s.ipc.send_to_opengloves([amp]*5)
 
 		pose = bone.lerp_pose(amp, open_pose, closed_pose)
@@ -102,12 +126,43 @@ if __name__ == "__main__":
 
 		fig.canvas.draw_idle()
 
+	def button_updates(event, num=0):
+		'''
+	      const bool joyButton; // 0
+		  const bool trgButton; // 1
+		  const bool aButton;   // 2
+		  const bool bButton;   // 3
+		  const bool grab;      // 4
+		  const bool pinch;     // 5
+		  const bool menu;      // 6 
+		  const bool calibrate; // 7
+		'''
+		print("Pressed button: ", num)
+		fingers = [sthumb.val, sindex.val, smiddle.val, sring.val, spinky.val]
+		bools = [False]*8
+		bools[num] = True
+		s.ipc.send_to_opengloves(fingers, bools)
+
+
+	# Slider updates
 	samp.on_changed(update_curl)
 	sthumb.on_changed(update)
 	sindex.on_changed(update)
 	smiddle.on_changed(update)
 	sring.on_changed(update)
 	spinky.on_changed(update)
+	sjoy_x.on_changed(update)
+	sjoy_y.on_changed(update)
+
+
+	# Button Updates
+	joy_button.on_clicked(lambda event: button_updates(event, num=0))
+	trigger_button.on_clicked(lambda event: button_updates(event, num=1))
+	a_button.on_clicked(lambda event: button_updates(event, num=2))
+	b_button.on_clicked(lambda event: button_updates(event, num=3))
+	grab_button.on_clicked(lambda event: button_updates(event, num=4))
+	pinch_button.on_clicked(lambda event: button_updates(event, num=5))
+	menu_button.on_clicked(lambda event: button_updates(event, num=6))
 
 
 	def reset(event):
