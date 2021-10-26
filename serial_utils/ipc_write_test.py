@@ -3,7 +3,10 @@
 https://stackoverflow.com/questions/48542644/python-and-windows-named-pipes
 '''
 import struct, time
-import win32pipe, win32file
+import win32pipe, win32file, win32con 
+from win32security import *
+from ntsecuritycon import *
+from win32process import *
 
 def pack_struct(flexion):
     ''' Struct format is from: https://github.com/LucidVR/opengloves-driver/.../EncodingManager.h#L17
@@ -30,6 +33,25 @@ def pack_struct(flexion):
     pack_obj = pack_obj + joys + pack_bools
     return pack_obj
 
+def pipe_security():
+    dacl = ACL()
+
+    # Deny NT AUTHORITY\NETWORK SID
+    sid = CreateWellKnownSid(WinNetworkSid)
+    dacl.AddAccessDeniedAce(ACL_REVISION, GENERIC_ALL, sid)
+
+    # Allow current user SID
+    token = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY)
+    sid = GetTokenInformation(token, TokenUser)[0]
+    dacl.AddAccessAllowedAce(ACL_REVISION, GENERIC_READ | GENERIC_WRITE, sid)
+
+    security_descriptor = SECURITY_DESCRIPTOR()
+    security_descriptor.SetSecurityDescriptorDacl(True, dacl, False)
+
+    security_attributes = SECURITY_ATTRIBUTES()
+    security_attributes.SECURITY_DESCRIPTOR = security_descriptor
+    return security_attributes
+
 if __name__ == "__main__":
     fingers = [0,512,512,512,1023]
     packed = pack_struct(fingers)
@@ -39,16 +61,20 @@ if __name__ == "__main__":
     pipename = r'\\.\\pipe\\vrapplication\\input\\right'
     #pipename = "\\\\.\\pipe\\vrapplication\\input\\left"
 
-    pipe = win32pipe.CreateNamedPipe(
-            pipename,
-            win32pipe.PIPE_ACCESS_OUTBOUND,
-            win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_WAIT,
-            1, 65536, 65536,
-            300,
-            None)
+    #security_attributes = pipe_security()
+    # https://github.com/LucidVR/opengloves-driver/blob/develop/overlay/main.cpp#L128
+    open_mode = win32con.GENERIC_READ | win32con.GENERIC_WRITE
+
+    pipe = win32file.CreateFile(pipename,
+                                     open_mode,
+                                     0, # no sharing
+                                     None, # default security
+                                     win32con.OPEN_EXISTING,
+                                     0, # win32con.FILE_FLAG_OVERLAPPED,
+                                     None)
     try:
-        win32pipe.ConnectNamedPipe(pipe, None)
-        print("Connected")
+        #win32pipe.ConnectNamedPipe(pipe, None)
+        #print("Connected")
 
         for i in range(0,10):
             fingers = [i]*5
