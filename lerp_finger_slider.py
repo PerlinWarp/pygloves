@@ -23,6 +23,7 @@ if __name__ == "__main__":
 	ax.set_xlabel('X [m]')
 	ax.set_ylabel('Y [m]')
 	ax.set_zlabel('Z [m]')
+	ax.view_init(elev=25, azim=-150)
 
 	# Slider setup
 	ax.margins(x=0)
