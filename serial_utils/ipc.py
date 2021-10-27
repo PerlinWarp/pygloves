@@ -19,14 +19,16 @@ def pack_struct(flexion, joys=None, bools=None):
   const bool menu;      // 6 
   const bool calibrate; // 7
     '''
-    if joys == None:
-        joyX = 0.0
-        joyY = 0.0
-    else:
+    if joys is not None:
+        print(joys)
         joyX = joys[0]
         joyY = joys[1]
-    if bools == None:
-        bools = [False]*8
+    else:
+        joyX = 0.0
+        joyY = 0.0
+    
+    if bools is None:
+        bools = [False, False, False, False, False, False, False, False] 
 
     # https://tuttlem.github.io/2016/04/06/packing-data-with-python.html
     pack_obj = struct.pack('@5f', flexion[0], flexion[1], flexion[2], flexion[3], flexion[4])
@@ -66,7 +68,9 @@ if __name__ == "__main__":
                     for i4 in range(0,10):
                         for i5 in range(0,10):
                             fingers = [i1/10, i2/10, i3/10, i4/10, i5/10]
-                            send_to_opengloves(fingers)
+                            bools = [True]*8
+                            bools[6] = True
+                            send_to_opengloves(fingers, bools=bools)
                             
                             time.sleep(0.01)
                             print(f"Wrote {fingers} to IPC")

@@ -2,6 +2,7 @@
 Inside opengloves you need to be using the NamedPipe communication method with the right hand enabled.
 Note this is made for the right hand.
 '''
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
@@ -15,6 +16,9 @@ a0 = 1.0
 # Select which poses we want to lerp between
 open_pose = bone.right_open_pose
 closed_pose = bone.right_fist_pose
+
+# IPC
+ipc_bools = [False, False, False, False, False, False, False, False]
 
 if __name__ == "__main__":
 	# Get something to plot initially
@@ -45,14 +49,14 @@ if __name__ == "__main__":
 
 
 	# Add the sliders
-	samp = Slider(axamp, 'All', 0.1, 1.0, valinit=a0)
-	sthumb = Slider(ax_thumb, 'Thumb', 0.1, 1.0, valinit=a0)
-	sindex = Slider(ax_index, 'Index', 0.1, 1.0, valinit=a0)
-	smiddle = Slider(ax_middle, 'Middle', 0.1, 1.0, valinit=a0)
-	sring = Slider(ax_ring, 'Ring', 0.1, 1.0, valinit=a0)
-	spinky = Slider(ax_pinky, 'Pinky', 0.1, 1.0, valinit=a0)
-	sjoy_x = Slider(ax_joy_x, 'Joy X', -1.0, 1.0, valinit=a0)
-	sjoy_y = Slider(ax_joy_y, 'Joy Y', -1.0, 1.0, valinit=a0)
+	samp = Slider(axamp, 'All', 0.0, 1.0, valinit=a0)
+	sthumb = Slider(ax_thumb, 'Thumb', 0.0, 1.0, valinit=a0)
+	sindex = Slider(ax_index, 'Index', 0.0, 1.0, valinit=a0)
+	smiddle = Slider(ax_middle, 'Middle', 0.0, 1.0, valinit=a0)
+	sring = Slider(ax_ring, 'Ring', 0.0, 1.0, valinit=a0)
+	spinky = Slider(ax_pinky, 'Pinky', 0.0, 1.0, valinit=a0)
+	sjoy_x = Slider(ax_joy_x, 'Joy X', -1.0, 1.0, valinit=0.0)
+	sjoy_y = Slider(ax_joy_y, 'Joy Y', -1.0, 1.0, valinit=0.0)
 
 	# Button Setup
 	ax_joyb =    plt.axes([0.8, 0.40, 0.1, 0.03])
@@ -63,7 +67,6 @@ if __name__ == "__main__":
 	ax_pinch =   plt.axes([0.8, 0.15, 0.1, 0.03])
 	ax_menu =    plt.axes([0.8, 0.10, 0.1, 0.03])
 
-
 	# Add the button
 	joy_button = Button(ax_joyb, 'Joy Click', color=axcolor, hovercolor='0.975')
 	trigger_button = Button(ax_trigger, 'Trigger', color=axcolor, hovercolor='0.975')
@@ -71,7 +74,7 @@ if __name__ == "__main__":
 	b_button = Button(ax_b, 'B', color=axcolor, hovercolor='0.975')
 	grab_button = Button(ax_grab, 'Grab', color=axcolor, hovercolor='0.975')
 	pinch_button = Button(ax_pinch, 'Pinch', color=axcolor, hovercolor='0.975')
-	menu_button = Button(ax_menu, 'Menu', color=axcolor, hovercolor='0.975')	
+	menu_button = Button(ax_menu, 'Menu', color=axcolor, hovercolor='0.975')
 
 	# Plot the Points
 	x = points[:,0]
@@ -93,10 +96,9 @@ if __name__ == "__main__":
 		# Read the sliders
 		amp = samp.val
 		fingers = [sthumb.val, sindex.val, smiddle.val, sring.val, spinky.val]
-		bools = [False]*8
-		joys = [sjoy_x.val, sjoy_x.val]
+		joys = [sjoy_x.val, sjoy_y.val]
 		print("Fingers", fingers, "Joys", joys)
-		s.ipc.send_to_opengloves(fingers, joys, bools)
+		s.ipc.send_to_opengloves(fingers, joys, ipc_bools)
 
 		points = bone.lerp_fingers(fingers, bone.right_open_pose, bone.right_fist_pose)
 		# Plot the Points
@@ -117,7 +119,7 @@ if __name__ == "__main__":
 
 		# Read the slider
 		amp = samp.val
-		s.ipc.send_to_opengloves([amp]*5)
+		s.ipc.send_to_opengloves([amp]*5, bools=ipc_bools)
 
 		pose = bone.lerp_pose(amp, open_pose, closed_pose)
 		points = bone.build_hand(pose, True)
@@ -139,10 +141,11 @@ if __name__ == "__main__":
 		'''
 		print("Pressed button: ", num)
 		fingers = [sthumb.val, sindex.val, smiddle.val, sring.val, spinky.val]
-		bools = [False]*8
-		bools[num] = True
-		s.ipc.send_to_opengloves(fingers, bools)
-
+		joys = [sjoy_x.val, sjoy_y.val]
+		# Click or unclick the button
+		ipc_bools[num] = not ipc_bools[num]
+		print(f"Button {num} is {ipc_bools[num]}")
+		s.ipc.send_to_opengloves(fingers, joys, ipc_bools)
 
 	# Slider updates
 	samp.on_changed(update_curl)
@@ -163,7 +166,6 @@ if __name__ == "__main__":
 	grab_button.on_clicked(lambda event: button_updates(event, num=4))
 	pinch_button.on_clicked(lambda event: button_updates(event, num=5))
 	menu_button.on_clicked(lambda event: button_updates(event, num=6))
-
 
 	def reset(event):
 		samp.reset()
