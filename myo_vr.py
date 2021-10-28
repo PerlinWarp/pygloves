@@ -27,6 +27,7 @@ import serial_utils as s
 from xgboost import XGBClassifier
 
 def pose_handler(pose):
+	ipc = s.ipc.NamedPipe()
 	# Set the default values
 	ipc_bools = [False, False, False, False, False, False, False, False]
 	ipc_fingers = [0,0,0,0,0]
@@ -39,9 +40,10 @@ def pose_handler(pose):
 	elif (pose == 6):
 		# Closed fist
 		print("Closed Fist")
-		ipc_fingers = [1.0,1.0,1.0,1.0,1.0]
+
+		ipc_fingers = [1,1,1,1,1]
 	# Send the data to opengloves
-	s.ipc.send_to_opengloves(ipc_fingers, ipc_joys, ipc_bools)
+	ipc.send(ipc_fingers, ipc_joys, ipc_bools)
 
 
 if __name__ == '__main__':
