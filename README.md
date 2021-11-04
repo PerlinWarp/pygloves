@@ -7,12 +7,17 @@ This repo attempts to plot glb files in the same was as Steam, so that you can t
 ```
 pip install numpy
 pip install matplotlib
-pip install pyserial
 
-# Test using Arduino over Serial (check comport and left/right handedness)
-python lerp_finger_from_serial.py
 # Test using GUI
 python lerp_finger_slider.py
+
+# Test using Arduino over Serial (check comport and left/right handedness)
+pip install pyserial
+python lerp_finger_from_serial.py
+
+# Test using Myo
+pip install pyomyo
+python lerp_finger_from_myo.py
 ```
 
 #### lerp_finger_from_serial.py  
@@ -22,7 +27,11 @@ In order to work, you need to define the COM port that the Arduino is using and 
 #### lerp_finger_slider.py  
 Features 6 sliders, one for overall curl and one for each finger.   
 Moving these sliders will generate plots of the hand using those curl values.  
-
+  
+#### opengloves_tester.py
+![OpenGloves Tester](https://media3.giphy.com/media/XJ91vwQnm96PeSRl9V/giphy.gif)  
+Sends flexion values from GUI sliders to OpenGloves using a NamedPipe.  
+  
 #### bone.py  
 Attempts to plot the OpenGloves glb file.   
 The glb file is hierarchical, so the end of the finger cannot just be plotted, it has to be calculated by considering the other points in the finger. Relative positions have to be built into global positons.
