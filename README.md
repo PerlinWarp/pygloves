@@ -1,4 +1,4 @@
-# pygloves-utils  
+# pygloves  
 ![Demo showing hand and finger movement](https://media2.giphy.com/media/4P8L3HQAg5qEDBmffP/giphy.gif?cid=790b7611cd5a3029ab0414bbdc674fb1a19867a290c3426a&rid=giphy.gif&ct=g)
 
 It would be nice to see if [LucidGloves](https://github.com/LucidVR/lucidgloves) work without having to start SteamVR.
