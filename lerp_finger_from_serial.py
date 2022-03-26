@@ -10,6 +10,7 @@ import serial_utils as s
 
 # Use device manager to find the Arduino's serial port.
 COM_PORT = "COM4"
+MAX_SERIAL_VALUE = 4095 #maximum expected value coming from serial. set to 1023 if using an older arduino instead of a esp32
 RESET_SCALE = True
 LEGACY_DECODE = False # If false, will use alpha encodings
 
@@ -63,11 +64,11 @@ def animate(i):
 		ax.set_zlim3d([0, 0.2])
 
 	# Turn finger values into Lerp Vals
-	thumb_val = fingers[0] / 1024
-	index_val = fingers[1] / 1024
-	middle_val = fingers[2] / 1024
-	ring_val = fingers[3] / 1024
-	pinky_val = fingers[4] / 1024
+	thumb_val = fingers[0] / MAX_SERIAL_VALUE
+	index_val = fingers[1] / MAX_SERIAL_VALUE
+	middle_val = fingers[2] / MAX_SERIAL_VALUE
+	ring_val = fingers[3] / MAX_SERIAL_VALUE
+	pinky_val = fingers[4] / MAX_SERIAL_VALUE
 	print("Fingers", fingers)
 	fingers = [thumb_val, index_val, middle_val, ring_val, pinky_val]
 	# Lerp the right hand

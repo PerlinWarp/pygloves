@@ -10,6 +10,7 @@ import serial_utils as s
 
 # Use device manager to find the Arduino's serial port.
 COM_PORT = "COM9"
+MAX_SERIAL_VALUE = 4095 #maximum expected value coming from serial. set to 1023 if using an older arduino instead of a esp32
 RESET_SCALE = True
 LEGACY_DECODE = False # If false, will use alpha encodings
 
@@ -25,7 +26,6 @@ ax.set_zlabel('Z [m]')
 # ------------ Serial Setup ---------------
 def serial_worker(q):
 	# Open Serial Port
-	COM_PORT = "COM9"
 	ser = serial.Serial(COM_PORT,'115200', timeout=1)  # open serial port
 	print("Listening on "+COM_PORT)
 
@@ -50,7 +50,7 @@ def animate(i):
 		fingers = list(q.get())
 
 	# Turn finger values into Lerp Vals
-	val = fingers[0] / 1000
+	val = fingers[0] / MAX_SERIAL_VALUE
 	print("Finger val", val)
 
 	# Plot
