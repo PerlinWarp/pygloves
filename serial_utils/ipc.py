@@ -88,15 +88,15 @@ if __name__ == "__main__":
     ipc_left = NamedPipe(right_hand=False)
 
     try:
-        for i1 in range(1, 10):
+        for i1 in range(0, 10):
 
-            for i2 in range(1, 10):
+            for i2 in range(0, 10):
 
-                for i3 in range(1, 10):
+                for i3 in range(0, 10):
 
-                    for i4 in range(1, 10):
+                    for i4 in range(0, 10):
 
-                        for i5 in range(1, 10):
+                        for i5 in range(0, 10):
 
                             flexions = [i1/10, i1/10, i1/10, i1/10, i2/10, i2/10, i2/10, i2/10, i3/10, i3/10, i3/10, i3/10, i4/10, i4/10, i4/10, i4/10, i5/10, i5/10, i5/10, i5/10]
 
